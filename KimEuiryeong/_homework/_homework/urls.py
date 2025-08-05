@@ -23,6 +23,10 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('main/', include('app.urls')),
     path('', RedirectView.as_view(url='/main/'), name='main'),
+    path('', include('app.urls')),  # 이렇게 설정하면 /api/chat/ 사용 가능
+    
+    
+    
     
     
 ]

@@ -491,21 +491,99 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-fetch('/ask_finance/', {
-    method: 'POST',
-    body: new URLSearchParams({
-        'user_input': '2024년 삼성전자 재무제표 알려줘',
-        'config_id': 'id_1',
-        'level': 'basic'
-        // 추가 파라미터 필요 시 추가
-    }),
-    headers: {
-        'X-CSRFToken': getCookie('csrftoken'),
-        'Content-Type': 'application/x-www-form-urlencoded'
+
+
+
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+}
+
+
+// django 공식문서 권장 방식
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
     }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  // 입력창, 버튼 선택
+  const inputBox = document.querySelector('.chat-input__box input');
+  const sendButton = document.querySelector('.chat-search-button button');
+
+  // Enter 키 이벤트
+  inputBox.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      sendChatMessage();
+    }
+  });
+
+  // 버튼 클릭 이벤트
+  sendButton.addEventListener('click', function() {
+    sendChatMessage();
+  });
+
+  // 메시지 전송 함수
+  function sendChatMessage() {
+    const message = inputBox.value.trim();
+    if (message !== '') {
+      // 여기서 메시지 전달 또는 UI 업데이터 실행
+      console.log('보낸 메시지:', message); // 임시로 콘솔에 출력
+
+           // Django API 호출
+        fetch('/api/chat/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+            // 필요한 경우 CSRF 토큰 헤더 포함
+        },
+        body: JSON.stringify({question: message})
+
+        })
+      .then(response => {
+  if (!response.ok) {
+    throw new Error(`서버 응답 오류: ${response.status}`);
+  }
+  return response.json();
 })
-.then(response => response.json())
 .then(data => {
-    // data.result에 답변
-    document.getElementById('result_area').innerText = data.result;
+  console.log('받은 전체 응답:', data);         // 객체 전체 확인
+  console.log('받은 실제 답변:', data.answer);  // 실제 답변 문자열만 확인
+  displayChatAnswer(data.answer);               // UI 출력
+})
+.catch(error => {
+  console.error('에러 발생:', error);
+  displayChatAnswer('⚠️ 서버 오류 발생');
 });
+
+
+      // 입력창 초기화
+      inputBox.value = '';
+    }
+  }
+});
+
+
+function displayChatAnswer(answer) {
+  // 답변을 화면에 출력하는 UI 처리 코드 작성
+  // 예: 메시지 리스트에 답변 추가
+  const chatContainer = document.querySelector('.chat-messages');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'chat-message bot';
+  msgDiv.textContent = answer;
+  chatContainer.appendChild(msgDiv);
+  chatContainer.scrollTop = chatContainer.scrollHeight;  // 스크롤 아래로 내리기
+}

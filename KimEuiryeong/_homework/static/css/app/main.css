@@ -536,3 +536,20 @@
 .news-box a:hover {
     text-decoration: underline;
 }
+
+
+.chat-message.user {
+  text-align: right;
+  background-color: #e0f7fa;
+  padding: 8px 12px;
+  margin: 5px;
+  border-radius: 10px;
+}
+
+.chat-message.bot {
+  text-align: left;
+  background-color: #f1f1f1;
+  padding: 8px 12px;
+  margin: 5px;
+  border-radius: 10px;
+}

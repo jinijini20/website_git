@@ -348,16 +348,42 @@ def crawl_naver_news(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
-
 from django.http import JsonResponse
-from utils2.main import run_langraph
-def ask_finance(request):
-    if request.method == 'POST':
-        user_input = request.POST.get('user_input')
-        config_id = request.POST.get('config_id', 'id_1')
-        level = request.POST.get('level', 'basic')
-        chat_history = request.POST.getlist('chat_history')
-        # chat_history는 list 형태로 넘어오지 않으면 직접 decode 필요
+from django.views.decorators.csrf import csrf_exempt
+import json
+from utils2.main import run_langraph  # langraph 함수가 utils2/main.py에 있다고 가정
 
-        result = run_langraph(user_input, config_id, level, chat_history)
-        return JsonResponse({'result': result})
+@csrf_exempt  # 테스트용
+def chat_api(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            question = data.get('question')
+
+            if not question:
+                return JsonResponse({'error': '질문이 없습니다.'}, status=400)
+            config_id = 'a1'  # 없으면 디폴트 문자열도 가능
+            # >>> 핵심 부분: langraph 함수(혹은 run_langraph)를 호출!
+            answer = run_langraph(question, config_id)
+
+            return JsonResponse({'answer': answer})
+
+        except Exception as e:
+            import traceback
+            print("=== 500 ERROR 발생! ===")
+            print(traceback.format_exc())  # 콘솔에 오류 상세히 찍힘
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'POST 방식만 허용됩니다.'}, status=405)
+
+
+
+
+
+
+
+
+
+
+
+
